@@ -1,0 +1,35 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build_lint:
+    name: Build, lint, and deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Prepare deployment
+        run: npm run zip
+
+      - name: Deploy
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: Galaxia
+          environment_name: Galaxia-Env
+          version_label: ${{ github.run_id }}
+          region: eu-central-1
+          deployment_package: galaxia.zip
